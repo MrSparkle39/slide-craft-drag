@@ -52,7 +52,11 @@ const createEmptyExercise = (): DragDropExerciseV1 => ({
     snapToZone: true,
     scoring: 'per-item',
     showInstantFeedback: true,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
+    contentBackgroundColor: '#ffffff',
+    zoneBackgroundColor: '#1e293b',
+    zoneTextColor: '#ffffff',
+    zoneBorderColor: '#3b82f6',
   },
   zones: [],
   items: [],
@@ -68,7 +72,11 @@ const createSampleExercise = (): DragDropExerciseV1 => ({
     snapToZone: true,
     scoring: 'per-item',
     showInstantFeedback: true,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f8fafc',
+    contentBackgroundColor: '#ffffff',
+    zoneBackgroundColor: '#1e293b',
+    zoneTextColor: '#ffffff',
+    zoneBorderColor: '#3b82f6',
   },
   zones: [
     {
@@ -223,27 +231,40 @@ const DroppableZone: React.FC<{
   isPreview?: boolean;
   showFeedback?: boolean;
   correctPlacements?: Set<string>;
-}> = ({ zone, items, isPreview = false, showFeedback = false, correctPlacements }) => {
+  exercise?: DragDropExerciseV1;
+}> = ({ zone, items, isPreview = false, showFeedback = false, correctPlacements, exercise }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: zone.id,
   });
+
+  const zoneStyles = exercise ? {
+    backgroundColor: exercise.settings.zoneBackgroundColor || '#1e293b',
+    color: exercise.settings.zoneTextColor || '#ffffff',
+    borderColor: zone.color || exercise.settings.zoneBorderColor || '#3b82f6',
+    borderWidth: '3px',
+    borderStyle: 'solid',
+  } : {};
 
   return (
     <Card 
       ref={setNodeRef}
       className={`
-        min-h-32 transition-all duration-200
+        min-h-32 transition-all duration-200 border-0
         ${isOver 
-          ? 'ring-2 ring-primary bg-primary/5 border-primary' 
-          : 'hover:border-primary/30'
+          ? 'ring-2 ring-offset-2 scale-105 shadow-lg' 
+          : 'hover:scale-102 hover:shadow-md'
         }
       `}
-      style={{ borderLeftColor: zone.color || undefined, borderLeftWidth: zone.color ? '4px' : undefined }}
+      style={zoneStyles}
     >
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">{zone.title}</CardTitle>
+        <CardTitle className="text-lg" style={{ color: exercise?.settings.zoneTextColor || '#ffffff' }}>
+          {zone.title}
+        </CardTitle>
         {zone.description && (
-          <p className="text-sm text-muted-foreground">{zone.description}</p>
+          <p className="text-sm opacity-80" style={{ color: exercise?.settings.zoneTextColor || '#ffffff' }}>
+            {zone.description}
+          </p>
         )}
       </CardHeader>
       <CardContent className="pt-0">
@@ -258,7 +279,10 @@ const DroppableZone: React.FC<{
             />
           ))}
           {items.length === 0 && (
-            <div className="text-muted-foreground text-sm py-4 w-full text-center">
+            <div 
+              className="text-sm py-4 w-full text-center opacity-60"
+              style={{ color: exercise?.settings.zoneTextColor || '#ffffff' }}
+            >
               {isOver ? 'Drop items here' : 'No items yet'}
             </div>
           )}
@@ -469,7 +493,10 @@ const DragDropBuilder: React.FC = () => {
         {/* Content Area */}
         <div className="container mx-auto px-6 py-8">
           <div className="max-w-4xl mx-auto">
-            <Card className="bg-white shadow-lg">
+            <Card 
+              className="shadow-lg border-0" 
+              style={{ backgroundColor: exercise.settings.contentBackgroundColor || '#ffffff' }}
+            >
               <CardContent className="p-8">
                 <DndContext onDragEnd={handleDragEnd}>
                   {/* Instructions */}
@@ -489,6 +516,7 @@ const DragDropBuilder: React.FC = () => {
                         isPreview={true}
                         showFeedback={showResults}
                         correctPlacements={score?.correct}
+                        exercise={exercise}
                       />
                     ))}
                   </div>
@@ -633,6 +661,7 @@ const DragDropBuilder: React.FC = () => {
                         isPreview={isPreview}
                         showFeedback={showResults}
                         correctPlacements={score?.correct}
+                        exercise={exercise}
                       />
                     ))}
                   </div>
@@ -967,29 +996,137 @@ const DragDropBuilder: React.FC = () => {
                             </Select>
                           </div>
 
-                          <div>
-                            <Label htmlFor="backgroundColor">Background Color</Label>
-                            <div className="flex gap-2 mt-1">
-                              <Input
-                                id="backgroundColor"
-                                type="color"
-                                value={exercise.settings.backgroundColor || '#ffffff'}
-                                onChange={(e) => setExercise(prev => ({
-                                  ...prev,
-                                  settings: { ...prev.settings, backgroundColor: e.target.value },
-                                }))}
-                                className="w-16 h-10 p-1 cursor-pointer"
-                              />
-                              <Input
-                                type="text"
-                                value={exercise.settings.backgroundColor || '#ffffff'}
-                                onChange={(e) => setExercise(prev => ({
-                                  ...prev,
-                                  settings: { ...prev.settings, backgroundColor: e.target.value },
-                                }))}
-                                placeholder="#ffffff"
-                                className="flex-1"
-                              />
+                          <div className="space-y-4">
+                            <h5 className="font-medium text-sm">Color Theme</h5>
+                            
+                            <div>
+                              <Label htmlFor="backgroundColor">Page Background</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  id="backgroundColor"
+                                  type="color"
+                                  value={exercise.settings.backgroundColor || '#f8fafc'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, backgroundColor: e.target.value },
+                                  }))}
+                                  className="w-16 h-10 p-1 cursor-pointer"
+                                />
+                                <Input
+                                  type="text"
+                                  value={exercise.settings.backgroundColor || '#f8fafc'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, backgroundColor: e.target.value },
+                                  }))}
+                                  placeholder="#f8fafc"
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="contentBackgroundColor">Content Background</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  id="contentBackgroundColor"
+                                  type="color"
+                                  value={exercise.settings.contentBackgroundColor || '#ffffff'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, contentBackgroundColor: e.target.value },
+                                  }))}
+                                  className="w-16 h-10 p-1 cursor-pointer"
+                                />
+                                <Input
+                                  type="text"
+                                  value={exercise.settings.contentBackgroundColor || '#ffffff'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, contentBackgroundColor: e.target.value },
+                                  }))}
+                                  placeholder="#ffffff"
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="zoneBackgroundColor">Zone Background</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  id="zoneBackgroundColor"
+                                  type="color"
+                                  value={exercise.settings.zoneBackgroundColor || '#1e293b'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneBackgroundColor: e.target.value },
+                                  }))}
+                                  className="w-16 h-10 p-1 cursor-pointer"
+                                />
+                                <Input
+                                  type="text"
+                                  value={exercise.settings.zoneBackgroundColor || '#1e293b'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneBackgroundColor: e.target.value },
+                                  }))}
+                                  placeholder="#1e293b"
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="zoneTextColor">Zone Text Color</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  id="zoneTextColor"
+                                  type="color"
+                                  value={exercise.settings.zoneTextColor || '#ffffff'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneTextColor: e.target.value },
+                                  }))}
+                                  className="w-16 h-10 p-1 cursor-pointer"
+                                />
+                                <Input
+                                  type="text"
+                                  value={exercise.settings.zoneTextColor || '#ffffff'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneTextColor: e.target.value },
+                                  }))}
+                                  placeholder="#ffffff"
+                                  className="flex-1"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <Label htmlFor="zoneBorderColor">Default Zone Border</Label>
+                              <div className="flex gap-2 mt-1">
+                                <Input
+                                  id="zoneBorderColor"
+                                  type="color"
+                                  value={exercise.settings.zoneBorderColor || '#3b82f6'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneBorderColor: e.target.value },
+                                  }))}
+                                  className="w-16 h-10 p-1 cursor-pointer"
+                                />
+                                <Input
+                                  type="text"
+                                  value={exercise.settings.zoneBorderColor || '#3b82f6'}
+                                  onChange={(e) => setExercise(prev => ({
+                                    ...prev,
+                                    settings: { ...prev.settings, zoneBorderColor: e.target.value },
+                                  }))}
+                                  placeholder="#3b82f6"
+                                  className="flex-1"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>

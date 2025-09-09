@@ -7,7 +7,11 @@ export type DragDropExerciseV1 = {
     snapToZone: boolean; // default true
     scoring: 'all-or-nothing' | 'per-item' | 'none';
     showInstantFeedback: boolean; // preview/player behavior hint
-    backgroundColor?: string; // background color for student view
+    backgroundColor?: string; // page background color
+    contentBackgroundColor?: string; // content area background
+    zoneBackgroundColor?: string; // drop zone background
+    zoneTextColor?: string; // drop zone text color
+    zoneBorderColor?: string; // default zone border color
   };
   zones: Array<{
     id: string;            // uuid
