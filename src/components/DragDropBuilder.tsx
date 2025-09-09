@@ -52,6 +52,7 @@ const createEmptyExercise = (): DragDropExerciseV1 => ({
     snapToZone: true,
     scoring: 'per-item',
     showInstantFeedback: true,
+    backgroundColor: '#ffffff',
   },
   zones: [],
   items: [],
@@ -67,6 +68,7 @@ const createSampleExercise = (): DragDropExerciseV1 => ({
     snapToZone: true,
     scoring: 'per-item',
     showInstantFeedback: true,
+    backgroundColor: '#ffffff',
   },
   zones: [
     {
@@ -431,6 +433,139 @@ const DragDropBuilder: React.FC = () => {
   const validationErrors = getValidationErrors();
   const canSave = validationErrors.length === 0;
 
+  // Preview Mode - Student Experience
+  if (isPreview) {
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: exercise.settings.backgroundColor || '#ffffff' }}>
+        {/* Course Player Header */}
+        <header className="bg-gray-900 text-white">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div>
+                  <h1 className="text-lg font-medium">Preview: Drag & Drop Exercise</h1>
+                  <p className="text-sm text-gray-300">Student Experience Preview</p>
+                </div>
+                <div className="text-sm text-gray-300">
+                  <div>Slide 1 of 1</div>
+                  <div>100% complete</div>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:bg-gray-800"
+                onClick={() => {
+                  setIsPreview(false);
+                  setShowResults(false);
+                }}
+              >
+                × Exit Preview
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="container mx-auto px-6 py-8">
+          <div className="max-w-4xl mx-auto">
+            <Card className="bg-white shadow-lg">
+              <CardContent className="p-8">
+                <DndContext onDragEnd={handleDragEnd}>
+                  {/* Instructions */}
+                  {exercise.instructions && (
+                    <div className="mb-6 text-center">
+                      <p className="text-lg text-gray-700">{exercise.instructions}</p>
+                    </div>
+                  )}
+
+                  {/* Zones */}
+                  <div className="space-y-6 mb-8">
+                    {exercise.zones.map((zone) => (
+                      <DroppableZone
+                        key={zone.id}
+                        zone={zone}
+                        items={getZoneItems(zone.id)}
+                        isPreview={true}
+                        showFeedback={showResults}
+                        correctPlacements={score?.correct}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Unassigned Items */}
+                  {getUnassignedItems().length > 0 && (
+                    <Card className="border-dashed border-2 border-gray-300">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base text-gray-600">Available Items</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div 
+                          {...useDroppable({ id: 'unassigned' }).setNodeRef}
+                          className="flex flex-wrap gap-3 min-h-16"
+                        >
+                          {getUnassignedItems().map((item) => (
+                            <DraggableItem 
+                              key={item.id} 
+                              item={item}
+                              isPreview={true}
+                            />
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Results */}
+                  {score && showResults && (
+                    <Card className="border-green-500 bg-green-50 mt-6">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <h3 className="text-lg font-semibold mb-2 text-green-800">Results</h3>
+                          <p className="text-2xl font-bold text-green-600">
+                            {score.earnedPoints} / {score.totalPoints} points
+                          </p>
+                          <p className="text-sm text-green-700">
+                            {Math.round((score.earnedPoints / score.totalPoints) * 100)}% correct
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </DndContext>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Navigation Controls */}
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700">
+          <div className="container mx-auto px-6 py-4">
+            <div className="flex items-center justify-center gap-4">
+              <Button variant="secondary" size="sm" disabled>
+                ← Previous Slide
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white px-6"
+                size="sm"
+                onClick={() => setShowResults(!showResults)}
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {showResults ? 'Hide Results' : 'Check Answers'}
+              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" size="sm" disabled>
+                Next Slide →
+              </Button>
+            </div>
+            <div className="text-center mt-2">
+              <p className="text-xs text-gray-400">Press SPACEBAR to play/pause</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Bar */}
@@ -467,7 +602,7 @@ const DragDropBuilder: React.FC = () => {
                     <CardTitle>Canvas</CardTitle>
                     <div className="flex gap-2">
                       <Button
-                        variant={isPreview ? "default" : "outline"}
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setIsPreview(!isPreview);
@@ -475,18 +610,8 @@ const DragDropBuilder: React.FC = () => {
                         }}
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        {isPreview ? 'Exit Preview' : 'Preview'}
+                        Student Preview
                       </Button>
-                      {isPreview && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowResults(!showResults)}
-                        >
-                          <Play className="h-4 w-4 mr-2" />
-                          Check Answers
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -840,6 +965,32 @@ const DragDropBuilder: React.FC = () => {
                                 <SelectItem value="none">No Scoring</SelectItem>
                               </SelectContent>
                             </Select>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="backgroundColor">Background Color</Label>
+                            <div className="flex gap-2 mt-1">
+                              <Input
+                                id="backgroundColor"
+                                type="color"
+                                value={exercise.settings.backgroundColor || '#ffffff'}
+                                onChange={(e) => setExercise(prev => ({
+                                  ...prev,
+                                  settings: { ...prev.settings, backgroundColor: e.target.value },
+                                }))}
+                                className="w-16 h-10 p-1 cursor-pointer"
+                              />
+                              <Input
+                                type="text"
+                                value={exercise.settings.backgroundColor || '#ffffff'}
+                                onChange={(e) => setExercise(prev => ({
+                                  ...prev,
+                                  settings: { ...prev.settings, backgroundColor: e.target.value },
+                                }))}
+                                placeholder="#ffffff"
+                                className="flex-1"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
